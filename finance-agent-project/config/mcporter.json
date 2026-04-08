@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "alpha-vantage": {
+      "url": "https://mcp.alphavantage.co/mcp?apikey=RK9S21IP5X28J7IC"
+    },
+    "financial-report": {
+      "command": "python3",
+      "args": ["/home/nio/.openclaw/workspace/mcp-servers/financial-report/index.py"]
+    }
+  },
+  "imports": []
+}

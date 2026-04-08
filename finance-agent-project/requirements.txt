@@ -1,0 +1,11 @@
+# Python 3.8+
+
+# HTTP 请求
+requests>=2.31.0
+httpx>=0.26.0
+
+# MCP Protocol (如果有官方 Python SDK)
+# mcp>=1.0.0
+
+# 工具
+urllib3>=2.0.0
