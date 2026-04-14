@@ -1,195 +1,175 @@
 # 多 Agent 美股财报分析系统 📊
 
-基于 Python 多 Agent 协作 与 MCP 的美股财报 One Pager 自动生成系统。
+真正的多 Agent 协作系统，每个 Agent 具备自主性、持续性、社交能力和学习能力。
 
 ---
 
 ## 🚀 快速开始
 
-### 前置条件
+### 1. 启动 Agent 集群
 
 ```bash
-# Python 3.8+
-python3 --version
-
-# 安装 mcporter (MCP 客户端)
-pip install mcporter  # 或 npm install -g mcporter
-
-# 安装依赖
-pip install -r requirements.txt
-```
-
-### 配置 MCP
-
-编辑 `config/mcporter.json`，确保包含：
-
-```json
-{
-  "mcpServers": {
-    "alpha-vantage": {
-      "url": "https://mcp.alphavantage.co/mcp?apikey=YOUR_API_KEY"
-    },
-    "financial-report": {
-      "command": "python3",
-      "args": ["mcp-servers/financial-report/index.py"]
-    }
-  }
-}
-```
-
----
-
-## 📱 使用方法
-
-### 方式 1: 飞书机器人
-
-在飞书中发送：
-```
-@机器人 AAPL
-@机器人 阿里巴巴
-@机器人 MSFT
-```
-
-### 方式 2: 命令行
-
-```bash
-# 通过 orchestrator 运行
 cd agents
-python3 orchestrator-multi.py AAPL
+./start-agents.sh start
+```
 
-# 通过 feishu-skill 运行
-cd skills/feishu-finance-agent
-python3 feishu-skill.py 'AAPL'
+### 2. 查看状态
+
+```bash
+./start-agents.sh status
+```
+
+### 3. 测试查询
+
+```bash
+python3 ../skills/feishu-finance-agent/feishu-skill.py "@机器人 AAPL"
+```
+
+### 4. 查看日志
+
+```bash
+./start-agents.sh logs datafetcher
+```
+
+### 5. 停止 Agent
+
+```bash
+./start-agents.sh stop
 ```
 
 ---
 
-## 🏗️ 架构
+## 🏗️ 系统架构
 
 ```
-用户 (飞书/命令行)
+用户 (飞书)
     ↓
-feishu-skill.py (入口)
+feishu-skill.py
     ↓
-orchestrator-multi.py (协调者)
+消息队列 (基于文件)
     ↓
 ┌─────────────────────────────────────┐
-│  4 个独立 Agent 进程                   │
+│  5 个常驻 Agent                       │
 │  • DataFetcher  → 获取财务数据       │
 │  • Analyst      → 分析数据           │
 │  • Reporter     → 生成报告           │
-│  • Reviewer     → 质量检查           │
+│  • Reviewer     → 质量审核           │
+│  • Orchestrator → 协调调度           │
 └─────────────────────────────────────┘
     ↓
 MCP Server → Alpha Vantage API
     ↓
-One Pager 报告 (Markdown)
+One Pager 报告 (纯文本)
 ```
+
+---
+
+## 🤖 5 个 Agent
+
+| Agent | 职责 | 自主性体现 |
+|-------|------|-----------|
+| **DataFetcher** | 获取财务数据 | 自主选择 API（基于成功率） |
+| **Analyst** | 分析数据 | 判断数据是否足够，可请求补充 |
+| **Reporter** | 生成报告 | 根据反馈返工 |
+| **Reviewer** | 质量审核 | 动态调整质量阈值 |
+| **Orchestrator** | 协调调度 | 进程管理、健康检查 |
+
+---
+
+## 💬 Agent 间协商
+
+**场景 1: Analyst 请求更多数据**
+```
+Analyst → NEGOTIATION_QUEUE → DataFetcher
+"数据不足，需要历史数据"
+```
+
+**场景 2: Reviewer 要求返工**
+```
+Reviewer → NEGOTIATION_QUEUE → Reporter
+"缺少风险提示，评分 60/100"
+```
+
+---
+
+## 📊 质量检查
+
+| 检查项 | 关键 |
+|--------|------|
+| 内容非空 | ✅ |
+| 包含业务概览 | ✅ |
+| 包含财务摘要 | ✅ |
+| 包含投资亮点 | ⚠️ |
+| 包含风险提示 | ✅ |
+| 包含股价信息 | ⚠️ |
+| 内容长度合理 | ⚠️ |
 
 ---
 
 ## 📁 项目结构
 
 ```
-finance-agent-project/
-├── agents/                          # 多 Agent 系统
-│   ├── orchestrator-multi.py        # 协调者
-│   ├── data-fetcher.py              # 数据获取
-│   ├── analyst.py                   # 数据分析
-│   ├── reporter.py                  # 报告生成
-│   ├── reviewer.py                  # 质量审核
-│   └── feishu-bridge.py             # 飞书桥接
+finance-multi-agent/
+├── agents/                          # 多 Agent 核心
+│   ├── message_queue.py             # 消息队列
+│   ├── base_agent.py                # Agent 基类
+│   ├── data_fetcher_agent.py        # DataFetcher
+│   ├── analyst_agent.py             # Analyst
+│   ├── reporter_agent.py            # Reporter
+│   ├── reviewer_agent.py            # Reviewer
+│   ├── orchestrator_daemon.py       # Orchestrator
+│   └── start-agents.sh              # 启动脚本
 │
-├── mcp-servers/financial-report/    # MCP 服务器
-│   └── index.py                     # 财务数据服务
-│
-├── skills/feishu-finance-agent/     # 飞书技能
-│   ├── feishu-skill.py              # 飞书入口
-│   └── feishu-stock-processor.py    # 股票处理
+├── skills/feishu-finance-agent/     # 飞书集成
+│   └── feishu-skill.py              # Skill 执行器
 │
 ├── config/
 │   └── mcporter.json                # MCP 配置
 │
-└── requirements.txt                 # Python 依赖
+└── README.md                        # 本文档
 ```
 
 ---
 
-## 📊 支持股票
+## 🔧 配置
 
-### 美股
-| 公司 | 代码 | 公司 | 代码 |
-|------|------|------|------|
-| 苹果 | AAPL | 微软 | MSFT |
-| 谷歌 | GOOGL | 亚马逊 | AMZN |
-| 特斯拉 | TSLA | 英伟达 | NVDA |
-| Meta | META | 奈飞 | NFLX |
+### MCP 配置
 
-### 中概股
-| 公司 | 代码 | 公司 | 代码 |
-|------|------|------|------|
-| 阿里巴巴 | BABA | 腾讯 | TCEHY |
-| 拼多多 | PDD | 京东 | JD |
-| 百度 | BIDU | 比亚迪 | BYDDY |
-| 美团 | MPNGY | 网易 | NTES |
-| 小米 | XIACY | | |
+编辑 `config/mcporter.json`:
 
----
-
-## 📈 输出示例
-
-```markdown
-## 📊 Microsoft Corporation (MSFT)
-
-### 🏢 业务概览
-- **行业**: Technology / Software - Infrastructure
-- **主营业务**: 开发、许可和支持软件、服务、设备和解决方案
-- **市场地位**: 行业领先企业
-
-### 💰 财务摘要 (TTM)
-| 指标 | 数值 |
-|------|------|
-| 市值 | 3.12T |
-| 营收 | 245.12B |
-| 净利润 | 88.14B |
-| PE (TTM) | 36.2 |
-
-### ✨ 投资亮点
-• Azure 云业务持续增长，市场份额提升
-• AI 投资领先，Copilot 产品商业化顺利
-
-### ⚠️ 风险提示
-• 云市场竞争加剧（AWS、Google Cloud）
-• AI 投资回报存在不确定性
+```json
+{
+  "mcpServers": {
+    "alpha-vantage": {
+      "url": "https://mcp.alphavantage.co/mcp?apikey=YOUR_API_KEY"
+    }
+  }
+}
 ```
 
----
+### API Key
 
-## ⚙️ 配置说明
-
-### Alpha Vantage API
-
-1. 获取免费 API Key: https://www.alphavantage.co/support/#api-key
-2. 编辑 `config/mcporter.json`，替换 `YOUR_API_KEY`
-3. 免费配额：25 次/日
-
-### 模拟数据
-
-当 API 配额用尽时，系统自动使用内置模拟数据（支持常用股票）。
+Alpha Vantage API Key: `RK9S21IP5X28J7IC` (25 次/日免费)
 
 ---
 
-## 🔧 技术栈
+## 📈 性能指标
 
-| 组件 | 技术 |
+| 指标 | 目标 |
 |------|------|
-| 语言 | Python 3.8+ |
-| 协议 | MCP (Model Context Protocol) |
-| 数据源 | Alpha Vantage API |
-| 通信 | stdin/stdout (JSON) |
-| 部署 | 本地运行 |
+| 响应时间 | < 3 秒 |
+| 质量评分 | > 90 分 |
+| 服务可用性 | 100% |
 
 ---
 
+## 🛠️ 技术栈
 
-*最后更新：2026-04-09*
+- **语言**: Python 3.8+
+- **通信**: 基于文件的简易消息队列
+- **数据源**: Alpha Vantage API (via MCP)
+- **渠道**: 飞书开放平台
+
+---
+
+*最后更新：2026-04-10*
