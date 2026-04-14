@@ -1,0 +1,6 @@
+# 多 Agent 美股财报分析系统 - Python 依赖
+
+# MCP 客户端
+mcporter>=0.1.0
+
+# 无其他依赖（使用 Python 标准库）
