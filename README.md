@@ -1,6 +1,6 @@
 # 多 Agent 美股财报分析系统 📊
 
-真正的多 Agent 协作系统，每个 Agent 具备自主性、持续性、社交能力和学习能力。
+多 Agent 协作系统，每个 Agent 具备自主性、持续性、社交能力和学习能力。
 
 ---
 
@@ -149,7 +149,7 @@ finance-multi-agent/
 
 ### API Key
 
-Alpha Vantage API Key: `RK9S21IP5X28J7IC` (25 次/日免费)
+Alpha Vantage API Key: `。。。` (25 次/日免费)
 
 ---
 
